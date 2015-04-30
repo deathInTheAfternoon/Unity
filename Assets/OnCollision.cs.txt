@@ -1,0 +1,117 @@
+﻿using UnityEngine;
+using System.Collections;
+// Here's how this script is called:
+// The game object has a ParticleSystem attached to it. The PS is configured to call 'GameObject::SendMessage("OnParticleCollision")'.
+// when it deems fit. 'SendMessage' triggers a broadcast to all attached MonoBehaviours (base class for scripts).
+// Note: the 'name' property of a Component (a MonoBehaivour ISA Component) is set to that of its GO.
+public class OnCollision : MonoBehaviour {
+
+	public Color colour = Color.red;
+	public SphereCollider sphereCollider;
+	[Range(0, 1)]
+	public double widthOfZone = 0.01f;
+
+	public ParticleCollisionEvent[] collisionEvents;
+	void Start(){
+		collisionEvents = new ParticleCollisionEvent[16];
+	}
+
+	void spillParticleInfo(GameObject sphere, ParticleCollisionEvent pce){
+		Debug.Log (sphere.GetComponent<SphereCollider>().GetInstanceID());
+		Debug.Log (pce.collider.GetInstanceID());
+		Debug.Log (sphereCollider.GetInstanceID ());
+		ParticleSystem ps = GetComponent<ParticleSystem> ();
+		ParticleSystem.Particle[] newParticleArray = new ParticleSystem.Particle[ps.particleCount];
+		int particleCount = ps.GetParticles (newParticleArray);
+		for (int i = 0; i < particleCount; i++) {
+			ParticleSystem.Particle incoming = newParticleArray [i];
+			//Debug.Log("Particle " + i + " at " + transform.TransformPoint( incoming.position));
+			Debug.Log("Distance " + Vector3.Distance(pce.intersection, transform.TransformPoint( incoming.position)));
+		}
+	}
+
+	void OnParticleCollision(GameObject someObject){
+		if (someObject) {
+			if (someObject.GetInstanceID() == sphereCollider.GetInstanceID()){
+				ParticleSystem ps = GetComponent<ParticleSystem> ();
+				
+				int numCollisionEvents = ps.GetCollisionEvents(sphereCollider, collisionEvents);
+				ParticleCollisionEvent pce = collisionEvents [0];
+
+				Debug.Log ("Collision intersection at :" + pce.intersection);
+
+
+			}
+		}
+	}
+
+//	// ParticleSystem/Collision/'Send Collision Messages' must be turned on for this to be called by the GO.
+//	void OnParticleCollision(GameObject sphere){
+//		quickTest (sphere);
+//
+//		if (sphere) {
+//			// Ask the parent GO for its attached PS.
+//			ParticleSystem ps = GetComponent<ParticleSystem> ();
+//
+//			// To change Particles in a PS, we use an array-copy, where we transform them and
+//			// finally copy back to the PS.
+//			ParticleSystem.Particle[] newParticleArray = new ParticleSystem.Particle[ps.particleCount];
+//			int particleCount = ps.GetParticles (newParticleArray);
+//			// We want to know when the particle hits the sphere's Collider, which defines the physical edge.
+//			SphereCollider sphereCollider = sphere.GetComponent<SphereCollider> ();
+//			for (int i = 0; i < particleCount; i++) {
+//				ParticleSystem.Particle incoming = newParticleArray [i];
+//				if (isNearEnough (incoming, sphereCollider)) {
+//					newParticleArray [i].color = colour;	
+//				}
+//			}
+//			// assign array to particle system - otherwise you won't see any effect.
+//			ps.SetParticles(newParticleArray,particleCount);
+//		}
+//
+///*		for(int i=0;i<num;i++){
+//
+//			Debug.Log("(x, y, z) = (" + particles[i].position.x + "," + particles[i].position.y + "," + 
+//			          particles[i].position.z + ")");
+//			if(particles[i].position.z>5) // large local z: let particle drop down
+//				particles[i].velocity-=Vector3.up*0.1f;
+//			if(particles[i].position.y<-1) // positive x: make it red
+//				particles[i].color=Color.red;
+//			if(particles[i].position.x<-1) // negative x: make it die
+//				particles[i].lifetime=0;
+//		}
+//*/
+//	}
+//
+//	// Tests if incoming particle is within fuzzy zone around sphere's collider.
+//	// Every object has a 'Transform'. 'Transform.position' gives co-ordinates in world space. 
+//	private bool isNearEnough(ParticleSystem.Particle incoming, SphereCollider sphere){
+//
+//		//TEST
+//		Vector3 closestPointOnCollider = sphere.ClosestPointOnBounds (transform.TransformPoint(incoming.position));
+//		float dist = Vector3.Distance (closestPointOnCollider, incoming.position);
+//		
+///*		Debug.Log ("Sphere pos in world space: " + sphere.transform.position);
+//		Debug.Log ("radius of collider: " + sphere.radius);
+//		Debug.Log ("Particle pos in world space: " + transform.TransformPoint (incoming.position));
+//		Debug.Log ("distance between particle and sphere: " + dist);
+//		Debug.Log ("Closes point on Collider: " + closestPointOnCollider);
+//*/
+//
+//		bool ret = false;
+//		// Note, instead you could set Particle Emitter/'Simulation Space' to 'World' in the Inspector.
+//		// Otherwise the co-ordinates of the particle are relative to the emitter and require translation 
+//		// to world co-ordinates to figure out if they hit the position of the sphere.
+//		// So we see localPos = (0, -1, 0) which is below the emitter. But that's (0, 5, 0) from the world origin.
+//		Vector3 localFramePosIncoming = incoming.position;
+//		Vector3 worldFramePosIncoming = transform.TransformPoint(localFramePosIncoming);
+//		double radius = sphere.radius;
+//		double collisionZoneX = sphere.transform.position.x + radius + widthOfZone;
+//		double collisionZoneY = sphere.transform.position.y + radius + widthOfZone;
+//		double collisionZoneZ = sphere.transform.position.z + radius + widthOfZone;
+//
+//		if (worldFramePosIncoming.y < collisionZoneY)
+//			ret = true;
+//		return ret;
+//	}
+}
